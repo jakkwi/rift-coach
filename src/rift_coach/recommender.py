@@ -1,4 +1,4 @@
-"""Asks Claude for a pick and a loadout, using forced tool calls for structured output.
+"""Asks Claude for a pick and a loadout as structured JSON (see llm.py for backends).
 
 The model only reasons; facts (champion names, runes, items for the current patch)
 come from Data Dragon and are passed in the prompt. Picks are validated against
@@ -10,11 +10,10 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 
-from anthropic import AsyncAnthropic
-
 from .champselect import DraftState
 from .config import Config
 from .ddragon import GameData
+from .llm import Backend, make_backend
 
 SHARD_OPTIONS = {
     "offense": ["Adaptive Force", "Attack Speed", "Ability Haste"],
@@ -118,10 +117,10 @@ def validate_pick(rec: dict, pool: list[str], unavailable: set[str]) -> PickReco
 
 
 class Recommender:
-    def __init__(self, cfg: Config, data: GameData):
+    def __init__(self, cfg: Config, data: GameData, backend: Backend | None = None):
         self.cfg = cfg
         self.data = data
-        self.client = AsyncAnthropic(api_key=cfg.anthropic_api_key)
+        self.backend = backend or make_backend(cfg)
 
     def _system(self) -> str:
         return (
@@ -134,18 +133,9 @@ class Recommender:
         )
 
     async def _call_tool(self, tool: dict, user_content: str) -> dict:
-        msg = await self.client.messages.create(
-            model=self.cfg.claude.model,
-            max_tokens=self.cfg.claude.max_tokens,
-            system=self._system(),
-            tools=[tool],
-            tool_choice={"type": "tool", "name": tool["name"]},
-            messages=[{"role": "user", "content": user_content}],
+        return await self.backend.structured(
+            self._system(), user_content, tool["name"], tool["input_schema"]
         )
-        for block in msg.content:
-            if block.type == "tool_use":
-                return block.input
-        raise RuntimeError("Model did not return a tool call.")
 
     async def recommend_pick(self, draft: DraftState) -> PickRecommendation:
         pool = self.cfg.player.champion_pool

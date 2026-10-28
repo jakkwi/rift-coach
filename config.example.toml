@@ -13,8 +13,13 @@ role = "middle"
 champion_pool = ["Ahri", "Orianna", "Syndra"]
 
 [claude]
+# "api" (default): uses ANTHROPIC_API_KEY from .env with prepaid Console credits.
+# "subscription": signs in with your own Claude plan via the Agent SDK. Personal,
+#   local use only: Anthropic does not allow offering claude.ai login in apps you
+#   distribute. If you share or deploy Rift Coach, use "api".
+backend = "api"
 model = "claude-sonnet-5-5"
-max_tokens = 1500
+max_tokens = 1500       # api backend only
 # Answer language for reasoning and tips ("Polish", "English" ...)
 language = "Polish"
 

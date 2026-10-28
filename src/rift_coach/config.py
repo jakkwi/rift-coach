@@ -10,6 +10,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 VALID_ROLES = {"top", "jungle", "middle", "bottom", "utility"}
+VALID_BACKENDS = {"subscription", "api"}
 
 
 class ConfigError(Exception):
@@ -27,6 +28,7 @@ class PlayerConfig:
 
 @dataclass
 class ClaudeConfig:
+    backend: str = "api"   # "api" (API key) or "subscription" (personal local use only)
     model: str = "claude-sonnet-5-5"
     max_tokens: int = 1500
     language: str = "Polish"
@@ -70,6 +72,8 @@ def load_config(path: str | Path = "config.toml") -> Config:
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
         riot_api_key=os.getenv("RIOT_API_KEY", ""),
     )
-    if not cfg.anthropic_api_key:
-        raise ConfigError("ANTHROPIC_API_KEY is missing. Put it in .env.")
+    if cfg.claude.backend not in VALID_BACKENDS:
+        raise ConfigError(f"claude.backend must be one of {sorted(VALID_BACKENDS)}")
+    if cfg.claude.backend == "api" and not cfg.anthropic_api_key:
+        raise ConfigError("claude.backend = \"api\" needs ANTHROPIC_API_KEY in .env.")
     return cfg

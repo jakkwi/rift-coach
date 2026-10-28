@@ -16,26 +16,30 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 
-copy .env.example .env                # add ANTHROPIC_API_KEY
 copy config.example.toml config.toml  # set role + champion_pool
+copy .env.example .env                # set ANTHROPIC_API_KEY
 
-pytest                                # sanity check
+python -m rift_coach check            # one test question to Claude
 python -m rift_coach                  # start with the League Client open
 ```
 
-## Put it on GitHub (private) with milestones and issues
+### Claude backends
 
-Requires [GitHub CLI](https://cli.github.com) and `gh auth login` once.
+- `backend = "api"` (default): Claude API with `ANTHROPIC_API_KEY` in `.env`. Two calls per
+  game cost a fraction of a cent each.
+- `backend = "subscription"`: Claude Agent SDK signed in with your own Claude plan
+  (`python -m rift_coach login` once). **Personal, local use only.** Anthropic does not
+  allow apps that are shared or distributed to offer claude.ai login, so use the API
+  backend for anything beyond your own machine.
 
-```powershell
-git init -b main
-git add .
-git commit -m "Initial skeleton"
-gh repo create rift-coach --private --source=. --push
-python scripts/bootstrap_github.py    # labels, 6 milestones, ~19 issues
-```
+Both backends return the same structured output, so the rest of the app does not care
+which one is active.
 
-The bootstrap script is idempotent; use `--dry-run` to preview.
+## Project management
+
+Milestones and issues are defined as data in `scripts/github_plan.json` and created with
+`python scripts/bootstrap_github.py` (needs [GitHub CLI](https://cli.github.com)). The
+script is idempotent; `--dry-run` previews the changes.
 
 ## How it works
 
@@ -59,7 +63,8 @@ src/rift_coach/
   __main__.py     entry point, lcu-driver wiring
   coach.py        event handling: when to ask, what to import, console output
   champselect.py  LCU session -> DraftState
-  recommender.py  Claude prompts, tool schemas, pool validation
+  recommender.py  Claude prompts, schemas, pool validation
+  llm.py          backends: subscription (Agent SDK) or API key
   runes.py        rune names -> LCU perk page payload
   ddragon.py      Data Dragon download + cache
   config.py       config.toml + .env
@@ -77,4 +82,11 @@ tests/            pytest, offline fixtures
 
 ## Cost
 
-Two Claude calls per game (pick + loadout). Token usage logging is tracked in an issue.
+Two Claude calls per game (pick + loadout): a fraction of a cent each on the API backend.
+
+## Legal
+
+Rift Coach isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot
+Games or anyone officially involved in producing or managing Riot Games properties. Riot
+Games, and all associated properties are trademarks or registered trademarks of Riot
+Games, Inc.
