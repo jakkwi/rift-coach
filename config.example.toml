@@ -1,0 +1,24 @@
+# Copy to config.toml and adjust. config.toml is git-ignored.
+
+[player]
+# Riot ID, used from milestone M3 (match history)
+riot_id = "Name#EUNE"
+platform = "eun1"        # eun1, euw1, na1, kr ...
+region = "europe"        # routing region for match-v5
+
+# Your main role: top, jungle, middle, bottom, utility
+role = "middle"
+
+# The coach only ever recommends champions from this list. No surprise Swains.
+champion_pool = ["Ahri", "Orianna", "Syndra"]
+
+[claude]
+model = "claude-sonnet-5-5"
+max_tokens = 1500
+# Answer language for reasoning and tips ("Polish", "English" ...)
+language = "Polish"
+
+[app]
+auto_import_runes = true
+auto_set_summoner_spells = false
+rune_page_name = "RiftCoach"

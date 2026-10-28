@@ -1,0 +1,154 @@
+{
+  "localPlayerCellId": 2,
+  "myTeam": [
+    {
+      "cellId": 0,
+      "assignedPosition": "top",
+      "championId": 86,
+      "championPickIntent": 0,
+      "summonerId": 0,
+      "gameName": "",
+      "tagLine": ""
+    },
+    {
+      "cellId": 1,
+      "assignedPosition": "jungle",
+      "championId": 254,
+      "championPickIntent": 0,
+      "summonerId": 0,
+      "gameName": "",
+      "tagLine": ""
+    },
+    {
+      "cellId": 2,
+      "assignedPosition": "middle",
+      "championId": 0,
+      "championPickIntent": 103,
+      "summonerId": 0,
+      "gameName": "",
+      "tagLine": ""
+    },
+    {
+      "cellId": 3,
+      "assignedPosition": "bottom",
+      "championId": 0,
+      "championPickIntent": 0,
+      "summonerId": 0,
+      "gameName": "",
+      "tagLine": ""
+    },
+    {
+      "cellId": 4,
+      "assignedPosition": "utility",
+      "championId": 0,
+      "championPickIntent": 0,
+      "summonerId": 0,
+      "gameName": "",
+      "tagLine": ""
+    }
+  ],
+  "theirTeam": [
+    {
+      "cellId": 5,
+      "championId": 238
+    },
+    {
+      "cellId": 6,
+      "championId": 64
+    },
+    {
+      "cellId": 7,
+      "championId": 0
+    },
+    {
+      "cellId": 8,
+      "championId": 0
+    },
+    {
+      "cellId": 9,
+      "championId": 0
+    }
+  ],
+  "bans": {
+    "myTeamBans": [],
+    "theirTeamBans": []
+  },
+  "actions": [
+    [
+      {
+        "actorCellId": 0,
+        "type": "ban",
+        "championId": 157,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 1,
+        "type": "ban",
+        "championId": 122,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 5,
+        "type": "ban",
+        "championId": 61,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 6,
+        "type": "ban",
+        "championId": 50,
+        "completed": true,
+        "isInProgress": false
+      }
+    ],
+    [
+      {
+        "actorCellId": 0,
+        "type": "pick",
+        "championId": 86,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 5,
+        "type": "pick",
+        "championId": 238,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 6,
+        "type": "pick",
+        "championId": 64,
+        "completed": true,
+        "isInProgress": false
+      },
+      {
+        "actorCellId": 1,
+        "type": "pick",
+        "championId": 254,
+        "completed": true,
+        "isInProgress": false
+      }
+    ],
+    [
+      {
+        "actorCellId": 2,
+        "type": "pick",
+        "championId": 103,
+        "completed": false,
+        "isInProgress": true
+      },
+      {
+        "actorCellId": 3,
+        "type": "pick",
+        "championId": 0,
+        "completed": false,
+        "isInProgress": true
+      }
+    ]
+  ]
+}

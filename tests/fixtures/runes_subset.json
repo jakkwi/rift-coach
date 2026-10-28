@@ -1,0 +1,168 @@
+[
+  {
+    "id": 8100,
+    "key": "Domination",
+    "name": "Domination",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8112,
+            "key": "Electrocute",
+            "name": "Electrocute"
+          },
+          {
+            "id": 8128,
+            "key": "DarkHarvest",
+            "name": "Dark Harvest"
+          },
+          {
+            "id": 9923,
+            "key": "HailofBlades",
+            "name": "Hail of Blades"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8126,
+            "key": "CheapShot",
+            "name": "Cheap Shot"
+          },
+          {
+            "id": 8139,
+            "key": "TasteofBlood",
+            "name": "Taste of Blood"
+          },
+          {
+            "id": 8143,
+            "key": "SuddenImpact",
+            "name": "Sudden Impact"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8137,
+            "key": "SixthSense",
+            "name": "Sixth Sense"
+          },
+          {
+            "id": 8140,
+            "key": "GrislyMementos",
+            "name": "Grisly Mementos"
+          },
+          {
+            "id": 8141,
+            "key": "DeepWard",
+            "name": "Deep Ward"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8135,
+            "key": "TreasureHunter",
+            "name": "Treasure Hunter"
+          },
+          {
+            "id": 8105,
+            "key": "RelentlessHunter",
+            "name": "Relentless Hunter"
+          },
+          {
+            "id": 8106,
+            "key": "UltimateHunter",
+            "name": "Ultimate Hunter"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 8200,
+    "key": "Sorcery",
+    "name": "Sorcery",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8214,
+            "key": "SummonAery",
+            "name": "Summon Aery"
+          },
+          {
+            "id": 8229,
+            "key": "ArcaneComet",
+            "name": "Arcane Comet"
+          },
+          {
+            "id": 8230,
+            "key": "PhaseRush",
+            "name": "Phase Rush"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8224,
+            "key": "AxiomArcanist",
+            "name": "Axiom Arcanist"
+          },
+          {
+            "id": 8226,
+            "key": "ManaflowBand",
+            "name": "Manaflow Band"
+          },
+          {
+            "id": 8275,
+            "key": "NimbusCloak",
+            "name": "Nimbus Cloak"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8210,
+            "key": "Transcendence",
+            "name": "Transcendence"
+          },
+          {
+            "id": 8234,
+            "key": "Celerity",
+            "name": "Celerity"
+          },
+          {
+            "id": 8233,
+            "key": "AbsoluteFocus",
+            "name": "Absolute Focus"
+          }
+        ]
+      },
+      {
+        "runes": [
+          {
+            "id": 8237,
+            "key": "Scorch",
+            "name": "Scorch"
+          },
+          {
+            "id": 8232,
+            "key": "Waterwalking",
+            "name": "Waterwalking"
+          },
+          {
+            "id": 8236,
+            "key": "GatheringStorm",
+            "name": "Gathering Storm"
+          }
+        ]
+      }
+    ]
+  }
+]
