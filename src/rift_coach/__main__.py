@@ -57,6 +57,25 @@ async def check(cfg) -> None:
     console.print(f"[green]OK:[/green] {answer['greeting']} ({answer['champion']})")
 
 
+def print_pools(cfg, data) -> None:
+    from .roles import load_viable
+
+    p = cfg.player
+    roles = ["top", "jungle", "middle", "bottom", "utility"]
+    if p.pick_scope == "viable":
+        viable = load_viable(list(data.champions.values()))
+        console.print("Pick scope: [bold]viable[/bold] (best pick for the lobby role; "
+                      "comfort picks win close calls)")
+        for role in roles:
+            comfort = ", ".join(p.pool_for(role)) or "-"
+            count = len(viable.get(role, []))
+            console.print(f"  {role:<8} {count:>3} champions, comfort: {comfort}")
+    else:
+        console.print("Pick scope: [bold]pool[/bold] (only your pools)")
+        for role in roles:
+            console.print(f"  {role:<8} {', '.join(p.pool_for(role)) or '- (no suggestion)'}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="rift-coach")
     parser.add_argument(
@@ -92,7 +111,8 @@ def main() -> None:
 
     console.print("[dim]Loading Data Dragon...[/dim]")
     data = DataDragon().load()
-    console.print(f"Patch [bold]{data.version}[/bold], pool: {', '.join(cfg.player.champion_pool)}")
+    console.print(f"Patch [bold]{data.version}[/bold]")
+    print_pools(cfg, data)
 
     # Imported here so unit tests don't need a running client or lcu_driver internals.
     from lcu_driver import Connector

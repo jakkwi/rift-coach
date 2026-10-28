@@ -19,6 +19,14 @@ async def get_session(connection) -> dict | None:
     return await resp.json() if resp.status == 200 else None
 
 
+async def get_pickable_ids(connection) -> set[int] | None:
+    """Champions the client lets me pick right now (owned / free rotation, not taken)."""
+    resp = await connection.request("get", "/lol-champ-select/v1/pickable-champion-ids")
+    if resp.status != 200:
+        return None
+    return set(await resp.json())
+
+
 async def import_rune_page(connection, page: dict) -> bool:
     """Replaces the page with the same name (or the oldest editable page if slots are full)."""
     resp = await connection.request("get", "/lol-perks/v1/pages")

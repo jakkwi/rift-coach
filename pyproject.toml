@@ -26,6 +26,9 @@ rift-coach = "rift_coach.__main__:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+rift_coach = ["data/*.toml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

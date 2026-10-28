@@ -1,0 +1,46 @@
+# Champions that are a real, non-troll pick in each role (main + common flex picks).
+# Names must match Data Dragon display names; matching ignores case and punctuation.
+# Edit freely. New champions released after this list was written need to be added here.
+# Maintained by hand; last reviewed for patch 16.x.
+
+top = [
+  "Aatrox", "Akali", "Ambessa", "Aurora", "Camille", "Cho'Gath", "Darius", "Dr. Mundo",
+  "Fiora", "Gangplank", "Garen", "Gnar", "Gragas", "Gwen", "Illaoi", "Irelia", "Jax",
+  "Jayce", "K'Sante", "Kayle", "Kennen", "Kled", "Malphite", "Mordekaiser", "Nasus",
+  "Olaf", "Ornn", "Pantheon", "Poppy", "Quinn", "Renekton", "Riven", "Rumble", "Ryze",
+  "Sett", "Shen", "Singed", "Sion", "Tahm Kench", "Teemo", "Trundle", "Tryndamere",
+  "Urgot", "Vayne", "Vladimir", "Volibear", "Warwick", "Wukong", "Yasuo", "Yone",
+  "Yorick", "Zac",
+]
+
+jungle = [
+  "Amumu", "Bel'Veth", "Brand", "Briar", "Diana", "Ekko", "Elise", "Evelynn",
+  "Fiddlesticks", "Gragas", "Graves", "Hecarim", "Ivern", "Jarvan IV", "Jax", "Karthus",
+  "Kayn", "Kha'Zix", "Kindred", "Lee Sin", "Lillia", "Maokai", "Master Yi", "Nidalee",
+  "Nocturne", "Nunu & Willump", "Poppy", "Rammus", "Rek'Sai", "Rengar", "Sejuani",
+  "Shaco", "Shyvana", "Skarner", "Sylas", "Taliyah", "Talon", "Udyr", "Vi", "Viego",
+  "Volibear", "Warwick", "Wukong", "Xin Zhao", "Zac",
+]
+
+middle = [
+  "Ahri", "Akali", "Akshan", "Anivia", "Annie", "Aurelion Sol", "Aurora", "Azir",
+  "Cassiopeia", "Corki", "Diana", "Ekko", "Fizz", "Galio", "Hwei", "Irelia", "Kassadin",
+  "Katarina", "Kayle", "LeBlanc", "Lissandra", "Lux", "Malzahar", "Mel", "Naafiri",
+  "Neeko", "Orianna", "Pantheon", "Qiyana", "Ryze", "Seraphine", "Smolder", "Swain",
+  "Sylas", "Syndra", "Taliyah", "Talon", "Tristana", "Twisted Fate", "Veigar", "Vel'Koz",
+  "Vex", "Viktor", "Vladimir", "Xerath", "Yasuo", "Yone", "Zed", "Ziggs", "Zoe",
+]
+
+bottom = [
+  "Aphelios", "Ashe", "Caitlyn", "Draven", "Ezreal", "Jhin", "Jinx", "Kai'Sa", "Kalista",
+  "Kog'Maw", "Lucian", "Miss Fortune", "Nilah", "Samira", "Senna", "Seraphine", "Sivir",
+  "Smolder", "Tristana", "Twitch", "Varus", "Vayne", "Xayah", "Yunara", "Zeri", "Ziggs",
+]
+
+utility = [
+  "Alistar", "Bard", "Blitzcrank", "Brand", "Braum", "Hwei", "Janna", "Karma", "Leona",
+  "Lulu", "Lux", "Maokai", "Mel", "Milio", "Morgana", "Nami", "Nautilus", "Neeko",
+  "Poppy", "Pyke", "Rakan", "Rell", "Renata Glasc", "Senna", "Seraphine", "Sona",
+  "Soraka", "Swain", "Tahm Kench", "Taric", "Thresh", "Vel'Koz", "Xerath", "Yuumi",
+  "Zilean", "Zyra",
+]

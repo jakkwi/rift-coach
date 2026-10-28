@@ -6,20 +6,32 @@ riot_id = "Name#EUNE"
 platform = "eun1"        # eun1, euw1, na1, kr ...
 region = "europe"        # routing region for match-v5
 
-# Your main role: top, jungle, middle, bottom, utility
+# Main role, used when the lobby assigns no position (e.g. blind pick).
+# Roles: top, jungle, middle, bottom, utility
 role = "middle"
 
-# The coach only ever recommends champions from this list. No surprise Swains.
-champion_pool = ["Ahri", "Orianna", "Syndra"]
+# "viable": best pick out of every real pick for the role (src/rift_coach/data/roles.toml),
+#           your pools below count as comfort picks and win close calls.
+# "pool":   pick only from your pools below.
+# Either way, only champions the client lets you pick are suggested.
+pick_scope = "viable"
+
+# Comfort picks per role. The role itself comes from the lobby.
+[player.pools]
+middle = ["Ahri", "Orianna", "Syndra"]
+top = ["Garen", "Darius"]
+# jungle = []
+# bottom = []
+# utility = []
 
 [claude]
-# "api" (default): uses ANTHROPIC_API_KEY from .env with prepaid Console credits.
-# "subscription": signs in with your own Claude plan via the Agent SDK. Personal,
-#   local use only: Anthropic does not allow offering claude.ai login in apps you
-#   distribute. If you share or deploy Rift Coach, use "api".
-backend = "api"
+# "api" (default): ANTHROPIC_API_KEY from .env with prepaid Console credits.
+# "subscription": your own Claude plan via `rift-coach login`. Personal local use only;
+#                 anything shared or deployed must use "api".
+backend = "subscription"
 model = "claude-sonnet-5-5"
 max_tokens = 1500       # api backend only
+effort = "medium"       # subscription backend: low | medium | high (higher = slower)
 # Answer language for reasoning and tips ("Polish", "English" ...)
 language = "Polish"
 

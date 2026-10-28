@@ -47,8 +47,9 @@ class ApiBackend:
 
 
 class SubscriptionBackend:
-    def __init__(self, model: str):
+    def __init__(self, model: str, effort: str | None = "medium"):
         self.model = model
+        self.effort = effort
 
     async def structured(self, system: str, prompt: str, name: str, schema: dict) -> dict:
         from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
@@ -62,6 +63,7 @@ class SubscriptionBackend:
             setting_sources=[],    # ignore any local CLAUDE.md / settings
             max_turns=3,
             output_format={"type": "json_schema", "schema": schema},
+            effort=self.effort,
             env=env,
         )
         result: ResultMessage | None = None
@@ -85,4 +87,4 @@ def parse_result(result) -> dict:
 def make_backend(cfg) -> Backend:
     if cfg.claude.backend == "api":
         return ApiBackend(cfg.anthropic_api_key, cfg.claude.model, cfg.claude.max_tokens)
-    return SubscriptionBackend(cfg.claude.model)
+    return SubscriptionBackend(cfg.claude.model, cfg.claude.effort)

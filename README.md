@@ -17,29 +17,38 @@ python -m venv .venv
 pip install -e ".[dev]"
 
 copy config.example.toml config.toml  # set role + champion_pool
-copy .env.example .env                # set ANTHROPIC_API_KEY
 
+python -m rift_coach login            # once: sign in with your Claude plan (browser)
 python -m rift_coach check            # one test question to Claude
 python -m rift_coach                  # start with the League Client open
 ```
 
-### Claude backends
+### Billing: subscription or API
 
-- `backend = "api"` (default): Claude API with `ANTHROPIC_API_KEY` in `.env`. Two calls per
-  game cost a fraction of a cent each.
-- `backend = "subscription"`: Claude Agent SDK signed in with your own Claude plan
-  (`python -m rift_coach login` once). **Personal, local use only.** Anthropic does not
-  allow apps that are shared or distributed to offer claude.ai login, so use the API
-  backend for anything beyond your own machine.
+- `backend = "api"` (default): Claude API with `ANTHROPIC_API_KEY` in `.env` (prepaid credits).
+- `backend = "subscription"`: Claude Agent SDK signed in with your own Claude plan; counts
+  against your plan's usage limits. Personal local use only; anything shared must use `api`.
 
-Both backends return the same structured output, so the rest of the app does not care
-which one is active.
+### Pick scope
 
-## Project management
+- `pick_scope = "viable"` (default): best pick out of every real pick for the assigned role
+  (`src/rift_coach/data/roles.toml`); your `[player.pools]` act as comfort picks.
+- `pick_scope = "pool"`: only your pools.
+- Either way only champions the client lets you pick (owned / free rotation) are suggested.
 
-Milestones and issues are defined as data in `scripts/github_plan.json` and created with
-`python scripts/bootstrap_github.py` (needs [GitHub CLI](https://cli.github.com)). The
-script is idempotent; `--dry-run` previews the changes.
+## Put it on GitHub (private) with milestones and issues
+
+Requires [GitHub CLI](https://cli.github.com) and `gh auth login` once.
+
+```powershell
+git init -b main
+git add .
+git commit -m "Initial skeleton"
+gh repo create rift-coach --private --source=. --push
+python scripts/bootstrap_github.py    # labels, 6 milestones, ~19 issues
+```
+
+The bootstrap script is idempotent; use `--dry-run` to preview.
 
 ## How it works
 
@@ -82,11 +91,5 @@ tests/            pytest, offline fixtures
 
 ## Cost
 
-Two Claude calls per game (pick + loadout): a fraction of a cent each on the API backend.
-
-## Legal
-
-Rift Coach isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot
-Games or anyone officially involved in producing or managing Riot Games properties. Riot
-Games, and all associated properties are trademarks or registered trademarks of Riot
-Games, Inc.
+Two Claude calls per game (pick + loadout). On the subscription backend they count
+against your plan limits; on the API backend they cost a fraction of a cent each.

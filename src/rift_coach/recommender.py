@@ -14,6 +14,7 @@ from .champselect import DraftState
 from .config import Config
 from .ddragon import GameData
 from .llm import Backend, make_backend
+from .roles import load_viable
 
 SHARD_OPTIONS = {
     "offense": ["Adaptive Force", "Attack Speed", "Ability Haste"],
@@ -27,7 +28,7 @@ PICK_TOOL = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "pick": {"type": "string", "description": "Champion from the player's pool."},
+            "pick": {"type": "string", "description": "Champion from the candidates list."},
             "alternatives": {"type": "array", "items": {"type": "string"}, "maxItems": 2},
             "reasoning": {"type": "string", "description": "2-4 sentences: why this pick here."},
         },
@@ -77,7 +78,8 @@ class PickRecommendation:
     pick: str
     alternatives: list[str]
     reasoning: str
-    corrected: bool = False   # True if the model suggested something outside the pool
+    corrected: bool = False   # True if the model suggested something outside the candidates
+    comfort: bool = False     # True if the pick is in my comfort pool
 
 
 @dataclass
@@ -96,9 +98,18 @@ class Loadout:
     reasoning: str = ""
 
 
+class NoPoolError(ValueError):
+    """No candidate champions for the role assigned in this lobby."""
+
+    def __init__(self, role: str):
+        super().__init__(role)
+        self.role = role
+
+
 def _draft_payload(draft: DraftState) -> dict:
     d = asdict(draft)
-    d.pop("my_turn_to_pick", None)
+    for k in ("my_turn_to_pick", "pick_phase", "locked_allies"):
+        d.pop(k, None)
     return d
 
 
@@ -121,6 +132,8 @@ class Recommender:
         self.cfg = cfg
         self.data = data
         self.backend = backend or make_backend(cfg)
+        known = list(data.champions.values()) if data else None
+        self.viable = load_viable(known)
 
     def _system(self) -> str:
         return (
@@ -137,27 +150,64 @@ class Recommender:
             self._system(), user_content, tool["name"], tool["input_schema"]
         )
 
-    async def recommend_pick(self, draft: DraftState) -> PickRecommendation:
-        pool = self.cfg.player.champion_pool
+    def role(self, draft: DraftState) -> str:
+        return self.cfg.player.role_for(draft.my_position)
+
+    def candidates(
+        self, draft: DraftState, pickable: set[str] | None = None
+    ) -> tuple[list[str], list[str]]:
+        """(champions the coach may pick from, my comfort pool) for this draft."""
+        role = self.role(draft)
+        comfort = self.cfg.player.pool_for(role)
+        if self.cfg.player.pick_scope == "pool":
+            cands = list(comfort)
+        else:
+            cands = list(dict.fromkeys(self.viable.get(role, []) + comfort))
+        if pickable is not None:
+            cands = [c for c in cands if c in pickable]
+        cands = [c for c in cands if c not in draft.unavailable()]
+        return cands, comfort
+
+    async def recommend_pick(
+        self, draft: DraftState, pickable: set[str] | None = None
+    ) -> PickRecommendation:
+        role = self.role(draft)
+        cands, comfort = self.candidates(draft, pickable)
+        if not cands:
+            raise NoPoolError(role)
+        if self.cfg.player.pick_scope == "pool":
+            task = f"Pick the best champion for me for {role} from my pool in this draft."
+        else:
+            task = (
+                f"Pick the strongest champion for {role} in this draft from `candidates`: "
+                "matchup, team comp and damage profile first. I'm an experienced player "
+                "(peak Diamond 2) returning after a break. `my_comfort_pool` are champions I "
+                "already play; prefer one of them when it is close to the best option. If the "
+                "pick is mechanically demanding or new to me, say so and give a comfort "
+                "alternative."
+            )
         prompt = json.dumps(
             {
-                "task": "Pick the best champion for me from my pool in this draft.",
-                "my_role": self.cfg.player.role,
-                "my_pool": pool,
-                "unavailable": sorted(draft.unavailable()),
+                "task": task,
+                "my_role": role,
+                "candidates": cands,
+                "my_comfort_pool": comfort,
                 "draft": _draft_payload(draft),
             },
             ensure_ascii=False,
             indent=2,
         )
         raw = await self._call_tool(PICK_TOOL, prompt)
-        return validate_pick(raw, pool, draft.unavailable())
+        rec = validate_pick(raw, cands, set())
+        rec.comfort = rec.pick in comfort
+        return rec
 
     async def recommend_loadout(self, draft: DraftState, champion: str) -> Loadout:
         prompt = json.dumps(
             {
-                "task": f"I locked {champion}. Give runes, summoner spells and build.",
-                "my_role": self.cfg.player.role,
+                "task": f"I locked {champion} ({self.role(draft)}). "
+                        "Give runes, summoner spells and build.",
+                "my_role": self.role(draft),
                 "draft": _draft_payload(draft),
                 "rune_trees": self.data.rune_names_by_tree(),
                 "shard_options": SHARD_OPTIONS,

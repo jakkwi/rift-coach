@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 VALID_ROLES = {"top", "jungle", "middle", "bottom", "utility"}
 VALID_BACKENDS = {"subscription", "api"}
+VALID_SCOPES = {"pool", "viable"}
 
 
 class ConfigError(Exception):
@@ -19,18 +20,31 @@ class ConfigError(Exception):
 
 @dataclass
 class PlayerConfig:
-    role: str
-    champion_pool: list[str]
+    role: str                                  # fallback when the lobby assigns no position
+    champion_pool: list[str] = field(default_factory=list)      # pool for `role`
+    pools: dict[str, list[str]] = field(default_factory=dict)   # per-role pools
+    # "pool": pick only from your pool. "viable": best pick from every real pick for the role
+    # (data/roles.toml), with your pool passed as comfort picks.
+    pick_scope: str = "viable"
     riot_id: str = ""
     platform: str = "eun1"
     region: str = "europe"
 
+    def role_for(self, assigned_position: str) -> str:
+        return assigned_position if assigned_position in VALID_ROLES else self.role
+
+    def pool_for(self, role: str) -> list[str]:
+        if role in self.pools:
+            return self.pools[role]
+        return self.champion_pool if role == self.role else []
+
 
 @dataclass
 class ClaudeConfig:
-    backend: str = "api"   # "api" (API key) or "subscription" (personal local use only)
+    backend: str = "api"   # "api" (API key) or "subscription" (own Claude plan, personal use)
     model: str = "claude-sonnet-5-5"
     max_tokens: int = 1500
+    effort: str = "medium"          # subscription backend: low | medium | high
     language: str = "Polish"
 
 
@@ -58,12 +72,21 @@ def load_config(path: str | Path = "config.toml") -> Config:
 
     raw = tomllib.loads(path.read_text(encoding="utf-8"))
     player_raw = raw.get("player", {})
-    if not player_raw.get("champion_pool"):
-        raise ConfigError("player.champion_pool must contain at least one champion.")
+    player_raw = {**player_raw, "pools": dict(player_raw.get("pools", {}))}
+    scope = player_raw.get("pick_scope", "viable")
+    if scope not in VALID_SCOPES:
+        raise ConfigError(f"player.pick_scope must be one of {sorted(VALID_SCOPES)}")
+    if scope == "pool" and not player_raw.get("champion_pool") and not any(
+        player_raw["pools"].values()
+    ):
+        raise ConfigError("pick_scope = \"pool\" needs champion_pool or [player.pools].")
 
     player = PlayerConfig(**player_raw)
     if player.role not in VALID_ROLES:
         raise ConfigError(f"player.role must be one of {sorted(VALID_ROLES)}, got {player.role!r}")
+    bad = set(player.pools) - VALID_ROLES
+    if bad:
+        raise ConfigError(f"Unknown roles in [player.pools]: {sorted(bad)}")
 
     cfg = Config(
         player=player,

@@ -23,16 +23,17 @@ class DraftState:
     my_champion: str | None
     my_locked: bool
     my_turn_to_pick: bool
+    pick_phase: bool = False        # at least one pick is in progress or done
     allies: list[AllyPick] = field(default_factory=list)
     enemies: list[str] = field(default_factory=list)
     bans: list[str] = field(default_factory=list)
+    locked_allies: list[str] = field(default_factory=list)
 
     def key(self) -> tuple:
-        """Changes only when information relevant to a recommendation changes."""
+        """Changes only on locked picks and bans, never on hovers (mine or allies')."""
         return (
-            self.my_champion,
-            self.my_locked,
-            tuple((a.position, a.champion) for a in self.allies),
+            self.my_position,
+            tuple(sorted(self.locked_allies)),
             tuple(sorted(self.enemies)),
             tuple(sorted(self.bans)),
         )
@@ -49,6 +50,9 @@ def parse_session(session: dict, champion_name: Callable[[int], str | None]) -> 
     my_pick_actions = [a for a in actions if a["actorCellId"] == me and a["type"] == "pick"]
     my_locked = any(a["completed"] for a in my_pick_actions)
     my_turn = any(a["isInProgress"] and not a["completed"] for a in my_pick_actions)
+    pick_phase = any(
+        a["type"] == "pick" and (a["isInProgress"] or a["completed"]) for a in actions
+    )
 
     allies: list[AllyPick] = []
     my_position = ""
@@ -73,12 +77,22 @@ def parse_session(session: dict, champion_name: Callable[[int], str | None]) -> 
     ban_ids |= set(bans_section.get("myTeamBans", [])) | set(bans_section.get("theirTeamBans", []))
     bans = sorted(name for cid in ban_ids if (name := champion_name(cid)))
 
+    ally_cells = {p["cellId"] for p in session.get("myTeam", [])} - {me}
+    locked_allies = sorted(
+        name
+        for a in actions
+        if a["type"] == "pick" and a["completed"] and a["actorCellId"] in ally_cells
+        if (name := champion_name(a["championId"]))
+    )
+
     return DraftState(
         my_position=my_position,
         my_champion=my_champion,
         my_locked=my_locked,
         my_turn_to_pick=my_turn,
+        pick_phase=pick_phase or my_turn,
         allies=allies,
         enemies=enemies,
         bans=bans,
+        locked_allies=locked_allies,
     )
