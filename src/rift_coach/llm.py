@@ -65,6 +65,16 @@ class SubscriptionBackend:
             output_format={"type": "json_schema", "schema": schema},
             effort=self.effort,
             env=env,
+            strict_mcp_config=True,  # no MCP servers from user/project config
+            extra_args={
+                # Don't write a Claude Code session transcript per call to ~/.claude/projects:
+                # useless here, and other apps (e.g. ChatGPT's "import from Claude Code"
+                # sync) pick those files up.
+                "no-session-persistence": None,
+                # Claude in Chrome tools alone add ~12k input tokens to every call.
+                "no-chrome": None,
+                "disable-slash-commands": None,
+            },
         )
         result: ResultMessage | None = None
         async for message in query(prompt=prompt, options=options):

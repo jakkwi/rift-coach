@@ -75,9 +75,11 @@ src/rift_coach/
   recommender.py  Claude prompts, schemas, pool validation
   llm.py          backends: subscription (Agent SDK) or API key
   runes.py        rune names -> LCU perk page payload
+  itemset.py      build -> in-game shop item set, spell order (Flash key)
+  roles.py        viable champions per role (data/roles.toml)
   ddragon.py      Data Dragon download + cache
   config.py       config.toml + .env
-  lcu/actions.py  client write actions (runes, spells)
+  lcu/actions.py  client write actions (runes, spells, item sets)
 scripts/          GitHub bootstrap (labels, milestones, issues)
 tests/            pytest, offline fixtures
 ```

@@ -51,8 +51,14 @@ class ClaudeConfig:
 @dataclass
 class AppConfig:
     auto_import_runes: bool = True
-    auto_set_summoner_spells: bool = False
+    pick_debounce_s: float = 2.0        # wait for the draft to settle before asking Claude
     rune_page_name: str = "RiftCoach"
+    # All rune slots used by your own pages: replace the currently selected one (like u.gg)?
+    overwrite_current_page_when_full: bool = False
+    auto_set_summoner_spells: bool = True
+    flash_key: str = "D"                # "D" or "F"
+    auto_item_set: bool = True
+    item_set_name: str = "RiftCoach"
 
 
 @dataclass
@@ -84,6 +90,9 @@ def load_config(path: str | Path = "config.toml") -> Config:
     player = PlayerConfig(**player_raw)
     if player.role not in VALID_ROLES:
         raise ConfigError(f"player.role must be one of {sorted(VALID_ROLES)}, got {player.role!r}")
+    flash = str(raw.get("app", {}).get("flash_key", "D")).upper()
+    if flash not in {"D", "F"}:
+        raise ConfigError("app.flash_key must be \"D\" or \"F\"")
     bad = set(player.pools) - VALID_ROLES
     if bad:
         raise ConfigError(f"Unknown roles in [player.pools]: {sorted(bad)}")

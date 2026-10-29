@@ -16,6 +16,7 @@ from rich.panel import Panel
 from .champselect import DraftState, parse_session
 from .config import Config
 from .ddragon import GameData
+from .itemset import build_item_set, order_spells
 from .lcu import actions
 from .recommender import Loadout, NoPoolError, PickRecommendation, Recommender
 from .runes import RuneMappingError, build_rune_page
@@ -90,6 +91,12 @@ class Coach:
         return {n for cid in ids if (n := self.data.champion_name(cid))}
 
     async def _handle_pick(self, connection, draft: DraftState) -> None:
+        # Picks often come in bursts; wait a moment so a lock 1 s later cancels this task
+        # before it costs a Claude call.
+        try:
+            await asyncio.sleep(self.cfg.app.pick_debounce_s)
+        except asyncio.CancelledError:
+            return
         role = self.recommender.role(draft)
         pickable = await self._pickable_names(connection)
         cands, _ = self.recommender.candidates(draft, pickable)
@@ -124,19 +131,73 @@ class Coach:
             return
         render_loadout(champion, loadout)
 
-        if self.cfg.app.auto_import_runes:
-            try:
-                page = build_rune_page(loadout, self.data.rune_trees, self.cfg.app.rune_page_name)
-                ok = await actions.import_rune_page(connection, page)
-                console.print("[green]Rune page imported.[/green]" if ok else
-                              "[yellow]Rune import failed, set runes manually.[/yellow]")
-            except RuneMappingError as exc:
-                console.print(f"[yellow]Could not map runes ({exc}). Set them manually.[/yellow]")
+        app = self.cfg.app
+        if app.auto_import_runes:
+            await self._import_runes(connection, loadout)
+        if app.auto_set_summoner_spells:
+            await self._set_spells(connection, loadout)
+        if app.auto_item_set:
+            await self._write_item_set(connection, champion, loadout)
 
-        if self.cfg.app.auto_set_summoner_spells:
-            ids = [self.data.summoner_spells.get(s) for s in loadout.summoner_spells]
-            if all(ids):
-                await actions.set_summoner_spells(connection, ids[0], ids[1])
+    async def _import_runes(self, connection, loadout: Loadout) -> None:
+        app = self.cfg.app
+        try:
+            page = build_rune_page(loadout, self.data.rune_trees, app.rune_page_name)
+            result = await actions.import_rune_page(
+                connection, page, app.overwrite_current_page_when_full
+            )
+        except RuneMappingError as exc:
+            console.print(f"[yellow]Runes: could not map ({exc}), set them manually.[/yellow]")
+            return
+        except Exception as exc:  # noqa: BLE001
+            log.exception("Rune import failed")
+            console.print(f"[yellow]Runes: import failed ({exc}), set them manually.[/yellow]")
+            return
+        if result is actions.RuneImport.IMPORTED:
+            console.print(f"[green]Runes: page '{app.rune_page_name}' imported "
+                          "and selected.[/green]")
+        elif result is actions.RuneImport.NO_FREE_SLOT:
+            console.print(f"[yellow]Runes: no free page slot. Rename one page to "
+                          f"'{app.rune_page_name}' (it will be reused) or set "
+                          "overwrite_current_page_when_full = true.[/yellow]")
+        else:
+            console.print("[yellow]Runes: client rejected the page, set them manually.[/yellow]")
+
+    async def _set_spells(self, connection, loadout: Loadout) -> None:
+        ids = order_spells(loadout.summoner_spells, self.data.summoner_spells,
+                           self.cfg.app.flash_key)
+        if ids is None:
+            console.print(f"[yellow]Spells: unknown {loadout.summoner_spells}, "
+                          "set them manually.[/yellow]")
+            return
+        try:
+            ok = await actions.set_summoner_spells(connection, *ids)
+        except Exception:  # noqa: BLE001
+            log.exception("Setting spells failed")
+            ok = False
+        console.print("[green]Spells: set.[/green]" if ok else
+                      "[yellow]Spells: client rejected them, set manually.[/yellow]")
+
+    async def _write_item_set(self, connection, champion: str, loadout: Loadout) -> None:
+        champion_id = self.data.champion_id(champion)
+        if champion_id is None:
+            return
+        item_set, missing = build_item_set(
+            loadout, champion, champion_id, self.data.item_ids, self.cfg.app.item_set_name
+        )
+        if not item_set["blocks"]:
+            console.print("[yellow]Item set: no known items in the build, skipped.[/yellow]")
+            return
+        try:
+            ok = await actions.write_item_set(connection, item_set)
+        except Exception:  # noqa: BLE001
+            log.exception("Item set write failed")
+            ok = False
+        if ok:
+            extra = f" (not on this patch: {', '.join(missing)})" if missing else ""
+            console.print(f"[green]Item set: '{item_set['title']}' is in the shop.{extra}[/green]")
+        else:
+            console.print("[yellow]Item set: client rejected it.[/yellow]")
 
 
 def render_pick(rec: PickRecommendation) -> None:

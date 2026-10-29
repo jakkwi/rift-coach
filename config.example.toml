@@ -36,6 +36,16 @@ effort = "medium"       # subscription backend: low | medium | high (higher = sl
 language = "Polish"
 
 [app]
+# After lock-in the coach writes runes, summoner spells and an item set into the client.
 auto_import_runes = true
-auto_set_summoner_spells = false
 rune_page_name = "RiftCoach"
+# Every rune slot holds one of your own pages: false = only print the runes,
+# true = overwrite the currently selected page (what u.gg / Blitz do).
+overwrite_current_page_when_full = false
+
+auto_set_summoner_spells = true
+flash_key = "D"                 # "D" or "F"
+
+# Item set shows up in the in-game shop under "RiftCoach <champion>".
+auto_item_set = true
+item_set_name = "RiftCoach"

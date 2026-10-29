@@ -45,6 +45,9 @@ class FakeData:
 def make_coach(champion_name):
     cfg = Config(player=PlayerConfig(role="middle", champion_pool=["Ahri"]))
     cfg.app.auto_import_runes = False
+    cfg.app.auto_set_summoner_spells = False
+    cfg.app.auto_item_set = False
+    cfg.app.pick_debounce_s = 0
     rec = SlowRecommender()
     return Coach(cfg, FakeData(champion_name), recommender=rec), rec
 
@@ -102,3 +105,24 @@ def test_stale_events_after_lock_are_ignored(session_my_turn, champion_name):
     asyncio.run(scenario())
     assert rec.picks == 0
     assert rec.loadouts == ["Ahri"]
+
+
+def test_burst_of_locks_makes_one_call(session_my_turn, champion_name):
+    coach, rec = make_coach(champion_name)
+    coach.cfg.app.pick_debounce_s = 0.1
+
+    async def scenario():
+        s = copy.deepcopy(session_my_turn)
+        await coach.on_session(None, s)
+        for cid in (222, 412):                                  # two quick ally locks
+            s = copy.deepcopy(s)
+            a = s["actions"][2][1]
+            a.update(championId=cid, completed=True, isInProgress=False)
+            s["actions"][2].append({"actorCellId": 4, "type": "pick", "championId": 0,
+                                    "completed": False, "isInProgress": True})
+            await coach.on_session(None, s)
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.5)
+
+    asyncio.run(scenario())
+    assert rec.picks == 1

@@ -7,7 +7,7 @@ current names and IDs instead of whatever the model remembers.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import httpx
@@ -23,30 +23,36 @@ class GameData:
     rune_trees: list[dict]              # raw runesReforged.json
     items: list[str]                    # purchasable Summoner's Rift item names
     summoner_spells: dict[str, int]     # spell name -> spell id
+    item_ids: dict[str, str] = field(default_factory=dict)  # item name -> item id
 
     @classmethod
     def from_raw(
         cls, version: str, champion: dict, runes: list, item: dict, summoner: dict
     ) -> GameData:
         champions = {int(c["key"]): c["name"] for c in champion["data"].values()}
-        items = sorted(
-            {
-                it["name"]
-                for it in item["data"].values()
-                if it.get("gold", {}).get("purchasable")
+        item_ids: dict[str, str] = {}
+        for item_id, it in sorted(item["data"].items(), key=lambda kv: int(kv[0])):
+            if (
+                it.get("gold", {}).get("purchasable")
                 and it.get("maps", {}).get(SUMMONERS_RIFT_MAP_ID)
+                and it.get("inStore", True)
                 and not it.get("requiredChampion")
-            }
-        )
+                and not it.get("requiredAlly")
+            ):
+                item_ids.setdefault(it["name"], item_id)   # lowest id wins on duplicates
+        items = sorted(item_ids)
         spells = {
             s["name"]: int(s["key"])
             for s in summoner["data"].values()
             if "CLASSIC" in s.get("modes", [])
         }
-        return cls(version, champions, runes, items, spells)
+        return cls(version, champions, runes, items, spells, item_ids)
 
     def champion_name(self, champion_id: int) -> str | None:
         return self.champions.get(champion_id) if champion_id else None
+
+    def champion_id(self, name: str) -> int | None:
+        return next((cid for cid, n in self.champions.items() if n == name), None)
 
     def rune_names_by_tree(self) -> dict[str, dict[str, list[str]]]:
         """Compact view for the prompt: tree -> {keystones: [...], minor: [...]}."""

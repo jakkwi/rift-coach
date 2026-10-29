@@ -57,14 +57,20 @@ LOADOUT_TOOL = {
             "core_items": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
             "situational": {
                 "type": "array",
+                "maxItems": 4,
                 "items": {
                     "type": "object",
-                    "properties": {"item": {"type": "string"}, "when": {"type": "string"}},
+                    "properties": {
+                        "item": {"type": "string"},
+                        "when": {"type": "string", "description": "One short clause."},
+                    },
                     "required": ["item", "when"],
                 },
             },
-            "matchup_tips": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
-            "reasoning": {"type": "string"},
+            "matchup_tips": {"type": "array", "items": {"type": "string"}, "maxItems": 3,
+                             "description": "One sentence each."},
+            "reasoning": {"type": "string",
+                          "description": "Max 3 sentences: the key rune and item choices."},
         },
         "required": ["primary_tree", "keystone", "primary_runes", "secondary_tree",
                      "secondary_runes", "shards", "summoner_spells", "starting_items",
@@ -181,22 +187,25 @@ class Recommender:
             task = (
                 f"Pick the strongest champion for {role} in this draft from `candidates`: "
                 "matchup, team comp and damage profile first. I'm an experienced player "
-                "(peak Diamond 2) returning after a break. `my_comfort_pool` are champions I "
-                "already play; prefer one of them when it is close to the best option. If the "
-                "pick is mechanically demanding or new to me, say so and give a comfort "
-                "alternative."
+                "(peak Diamond 2) returning after a break."
             )
-        prompt = json.dumps(
-            {
-                "task": task,
-                "my_role": role,
-                "candidates": cands,
-                "my_comfort_pool": comfort,
-                "draft": _draft_payload(draft),
-            },
-            ensure_ascii=False,
-            indent=2,
-        )
+            if comfort:
+                task += (
+                    " `my_comfort_pool` are champions I already play; prefer one of them when "
+                    "it is close to the best option. If the pick is mechanically demanding or "
+                    "new to me, say so and give a comfort alternative."
+                )
+            else:
+                task += " Judge purely on the draft; don't mention comfort picks."
+        payload = {
+            "task": task,
+            "my_role": role,
+            "candidates": cands,
+            "draft": _draft_payload(draft),
+        }
+        if comfort:
+            payload["my_comfort_pool"] = comfort
+        prompt = json.dumps(payload, ensure_ascii=False, indent=2)
         raw = await self._call_tool(PICK_TOOL, prompt)
         rec = validate_pick(raw, cands, set())
         rec.comfort = rec.pick in comfort
